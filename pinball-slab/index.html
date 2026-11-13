@@ -705,10 +705,11 @@ html[data-pal="flat"] .card{background:#fff;box-shadow:none}
 .stagebox .count{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
 .stagebox .count i{width:6px;height:6px;border-radius:3px;background:#c9cbcf;transition:width .5s var(--spring),background .3s}
 .stagebox .count i.on{width:22px;background:var(--accent)}
-.stage-main{position:absolute;inset:0;display:grid;place-items:center}
+.stage-main{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.stage-main>.shell:not(.leaving){pointer-events:auto}
 .stage-main>.shell{zoom:1.15}
 .stage-main>.shell.static{zoom:1.15}
-.arw{position:absolute;top:50%;width:48px;height:48px;margin-top:-24px;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;color:#55585e;
+.arw{position:absolute;z-index:5;top:50%;width:48px;height:48px;margin-top:-24px;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;color:#55585e;
   background:radial-gradient(circle at 50% 35%,#f8f9fa 0%,#eceef0 75%,#e2e4e7 100%);
   box-shadow:inset 0 1.5px 1px #fff,inset 0 -2px 3px rgba(0,0,0,.05),0 0 0 1px rgba(0,0,0,.035),0 2px 4px rgba(0,0,0,.08),2px 4px 10px -2px rgba(0,0,0,.12);
   transition:transform .5s var(--spring),box-shadow .3s}
@@ -755,7 +756,6 @@ html[data-pal="flat"] .card{background:#fff;box-shadow:none}
 <div class="page">
   <div class="hero">
     <div class="stagebox">
-      <div class="ttl" id="sTitle"></div>
       <button class="arw l" id="prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
       <div class="stage-main" id="stage"></div>
       <button class="arw r" id="next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
@@ -886,7 +886,7 @@ const B = {
   stepper(o={}){
     const W=230,H=64, MAXV=99;
     const s=shellEl('qty '+(o.e||'e2'),W,H,`
-      <div class="channel"><i class="bump"></i></div><i class="tint"></i>
+      <div class="channel"><i class="bump"></i><i class="tint"></i></div>
       <div class="end l">${mini('minus')}</div><div class="end r">${mini('plus')}</div>
       <div class="knob"><div class="dig"><span>${o.val??1}</span></div></div>`);
     const knob=s.querySelector('.knob'), dig=s.querySelector('.dig');
@@ -1317,13 +1317,18 @@ colours(); document.querySelectorAll('.palbar button').forEach(b=>b.addEventList
   };
   const render=(dir=0)=>{
     const C=COMPS[ui.c];
-    document.getElementById('sTitle').textContent=C.name;
     document.getElementById('dots').innerHTML=COMPS.map((_,i)=>`<i class="${i===ui.c?'on':''}"></i>`).join('');
-    const old=stage.firstElementChild, n=build();
-    if(old){ old.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateX(${-dir*60}px)`}],{duration:dir?220:120,easing:'ease-in'}).onfinish=()=>old.remove(); }
+    // only ever one button on stage: anything still leaving is dropped at once, the current one leaves on top
+    stage.querySelectorAll('.leaving').forEach(x=>x.remove());
+    const old=stage.querySelector(':scope > .shell:not(.leaving)'), n=build();
+    if(old){
+      old.classList.add('leaving');
+      Object.assign(old.style,{position:'absolute',left:'50%',top:'50%',translate:'-50% -50%',pointerEvents:'none'});
+      old.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateX(${-dir*60}px)`}],{duration:dir?200:120,easing:'ease-in',fill:'forwards'});
+      setTimeout(()=>old.remove(),dir?210:130);
+    }
     stage.appendChild(n);
-    if(old) n.style.position='absolute';
-    n.animate([{opacity:0,transform:`translateX(${dir*60}px)`},{opacity:1,transform:'none'}],{duration:dir?560:300,easing:'cubic-bezier(.34,1.45,.55,1)',delay:dir?80:0,fill:'backwards'}).onfinish=()=>{ n.style.position=''; };
+    n.animate([{opacity:0,transform:`translateX(${dir*60}px)`},{opacity:1,transform:'none'}],{duration:dir?560:300,easing:'cubic-bezier(.34,1.45,.55,1)',delay:dir?60:0,fill:'backwards'});
   };
   const panel=()=>{
     const C=COMPS[ui.c]; side.innerHTML='';
