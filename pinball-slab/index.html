@@ -445,9 +445,9 @@ h1 span{color:var(--mute);font-weight:500;margin-left:8px}
 .qty.lean-l .end.l,.qty.lean-r .end.r{color:var(--ink)}
 .qty.lean-l .knob{--dx:-9px}
 .qty.lean-r .knob{--dx:9px}
-.qty.lean-l .knob,.qty.lean-r .knob{--sx:1.04;--sy:.97}
-.qty.rush-r .knob{--dx:calc((var(--W) - var(--H)) / 2 - 4px);--sx:1.22;--sy:.86}
-.qty.rush-l .knob{--dx:calc((var(--W) - var(--H)) / -2 + 4px);--sx:1.22;--sy:.86}
+.qty.lean-l .knob,.qty.lean-r .knob{--sx:.98;--sy:1.02}
+.qty.rush-r .knob{--dx:calc((var(--W) - var(--H)) / 2 - 4px);--sx:.88;--sy:1.1}
+.qty.rush-l .knob{--dx:calc((var(--W) - var(--H)) / -2 + 4px);--sx:.88;--sy:1.1}
 .qty.rush-r .end.r,.qty.rush-l .end.l{transform:scale(.82)}
 
 /* SEND v13 — the knob swallows the button, then winds back like a bowstring */
@@ -945,9 +945,10 @@ const B = {
         if(throwAnim) throwAnim.cancel();
         throwAnim=knob.animate([
           {translate:'0 0',scale:'1 1'},
-          {translate:`${dir*D*.75}px 0`,scale:'1.3 .82',offset:.32},
-          {translate:`${dir*D}px 0`,scale:'.82 1.14',offset:.46},
-          {translate:`${dir*D*.92}px 0`,scale:'1.04 .97',offset:.6},
+          {translate:`${dir*D*.75}px 0`,scale:'1.08 .95',offset:.3},
+          {translate:`${dir*D}px 0`,scale:'.8 1.16',offset:.44},
+          {translate:`${dir*D}px 0`,scale:'.84 1.12',offset:.5},
+          {translate:`${dir*D*.9}px 0`,scale:'1.03 .98',offset:.62},
           {translate:'0 0',scale:'1 1'}],{duration:380,easing:'cubic-bezier(.3,.7,.3,1)'});
         if(digAnim) digAnim.cancel();
         const R=Math.round((D/((H-10)/2))*180/Math.PI); // roll angle for the distance travelled
@@ -1270,7 +1271,7 @@ const sp=el(`<div class="specs">
 <tr><td>Ease</td><td><code>cubic-bezier(.22, 1, .36, 1)</code></td></tr>
 <tr><td>Hover</td><td>send: ball swallows the slab · stepper: ball leans <code>9 px</code> to the pointer</td></tr>
 <tr><td>Hold to send</td><td>winds back over <code>1250 ms</code> · taut at 82 % · fires, plane flies off, ✓ then ✓✓ after <code>1.5 s</code></td></tr>
-<tr><td>Quantity tap</td><td>ball thrown to the end and back · <code>380 ms</code> · hits at <code>170 ms</code> · the number rolls with the ball (≈170°) and changes on the hidden side at impact</td></tr>
+<tr><td>Quantity tap</td><td>ball thrown to the end and back · flying <code>1.08 × 0.95</code> · hits the wall squashed narrow and tall <code>0.8 × 1.16</code> · pinned while holding <code>0.88 × 1.1</code> · <code>380 ms</code> · hits at <code>170 ms</code> · the number rolls with the ball (≈170°) and changes on the hidden side at impact</td></tr>
 <tr><td>Impact</td><td>instant, no fade: the slab recoils <code>2 px</code> toward the hit (<code>150 ms</code>) and flashes a flat <code>14 %</code> tint for <code>110 ms</code>, then cuts · each count while holding at half strength · wall at 0 / 99: <code>±3 px</code> shake, grey</td></tr>
 <tr><td>Quantity hold</td><td>pinned after <code>380 ms</code> · repeat from <code>220 ms</code>, × 0.86, floor <code>55 ms</code> · wall at 0 / 99 bounces</td></tr>
 <tr><td>Presets</td><td>ball slides to the pick with Spring · stretches with distance</td></tr>
