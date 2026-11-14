@@ -596,9 +596,17 @@ body:not(.light) .btn .ico{color:#c2c2c9}
 body:not(.light) .btn:not(.on):not(.done) .cnt{color:#8e8e96!important}
 body.light .btn .ico{color:#72727a}
 body.light .btn:not(.on):not(.done) .cnt{color:#85858d!important}
+
+/* thumbnail mode (?thumb=1): only the main button */
+body.thumb .w8h,body.thumb #grid,body.thumb .w8s:not(.show),body.thumb details.spec-d{display:none!important}
+body.thumb .wrap{padding:0!important;margin:0!important;max-width:none!important}
+body.thumb .w8s.show{margin:0!important}
+body.thumb .hero{height:100vh!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body.thumb .hero-in{zoom:3}
 </style>
 </head>
 <body class="sel-c">
+<script>if(/[?&]thumb=1/.test(location.search))document.body.classList.add('thumb')</script>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>
