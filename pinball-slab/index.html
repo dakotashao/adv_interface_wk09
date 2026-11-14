@@ -757,6 +757,22 @@ html.thumb .side,html.thumb .arw,html.thumb .count,html.thumb .fold{display:none
 html.thumb .hero{gap:0}
 html.thumb .stagebox{height:100vh;border-radius:0;background:transparent;box-shadow:none}
 html.thumb .stage-main>.shell{zoom:2.2}
+/* ===== undo window: 3 s, a ring drains round the ball (text only: a hairline) ===== */
+.bow .cd{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);transform:rotate(-90deg);pointer-events:none}
+.bow .cd circle{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;opacity:0}
+.bow.sent:not(.read):not(.undoing) .cd circle{opacity:1;animation:cd 3s linear forwards}
+.static.bow.sent:not(.read) .cd circle{animation:none;stroke-dashoffset:40}
+@keyframes cd{from{stroke-dashoffset:0}to{stroke-dashoffset:100}}
+.bow .tline{position:absolute;left:36px;right:36px;bottom:12px;height:2px;border-radius:1px;background:rgba(255,255,255,.75);transform:scaleX(0);pointer-events:none;z-index:5}
+.bow.sent:not(.read):not(.undoing) .tline{animation:tl 3s linear forwards}
+.static.bow.sent:not(.read) .tline{animation:none;transform:scaleX(.6)}
+@keyframes tl{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.bow.undoing .channel::after{opacity:0!important;transition:opacity .5s}
+.bow.undoing .lab.b{color:#6c6f75;transition:color .4s}
+.bow.undoing .ck *{stroke-dashoffset:24!important;transition:stroke-dashoffset .3s!important}
+.shell.e1.bow.undoing .channel::after{opacity:1!important}
+.shell.e1.bow.undoing .lab.b{color:#fff}
+
 </style>
 </head>
 <body>
@@ -1074,7 +1090,7 @@ const B = {
       <div class="knob"><div class="stack">
         <svg class="pl" viewBox="0 0 24 24">${P.send}</svg>
         <svg class="ck ck1" viewBox="0 0 24 24">${P.check}</svg>
-        <svg class="ck ck2" viewBox="0 0 24 24">${P.check}</svg></div></div>`);
+        <svg class="ck ck2" viewBox="0 0 24 24">${P.check}</svg></div>${V==='to'?'':'<svg class="cd" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" pathLength="100"/></svg>'}</div>${V==='to'?'<i class="tline"></i>':''}`);
     const knob=s.querySelector('.knob'), w=s.querySelector('.lab.b .w');
     s._knob=knob;
     const swapWord=t=>{
@@ -1082,7 +1098,7 @@ const B = {
         w.textContent=t; w.animate([{transform:'translateY(60%)',opacity:0},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(.34,1.45,.55,1)'});
       };
     };
-    s._finish=(read)=>{ s.classList.add('armed','sent'); s.dataset.s='done'; w.textContent=read?'Delivered':'Sent'; if(read) s.classList.add('read'); };
+    s._finish=(read)=>{ s.classList.add('armed','sent'); s.dataset.s='done'; w.textContent=read?'Delivered':'Tap to undo'; if(read) s.classList.add('read'); };
     if(o.live){
       let raf=0,t0=0,timers=[];
       const DUR=1250;
@@ -1104,18 +1120,26 @@ const B = {
         knob.animate(V==='io'?[{scale:'.86 .86'},{scale:'1.06 1.06'},{scale:'1 1'}]:[{scale:'.8 1.15'},{scale:'1.1 .92'},{scale:'.97 1.03'},{scale:'1 1'}],{duration:520,easing:'ease-out'});
         const pl=s.querySelector('.pl');
         pl.animate([{transform:'rotate(0deg) scale(1)',opacity:1},{transform:'translate(-25%,25%) rotate(0deg) scale(1)',opacity:1,offset:.25},{transform:'translate(170%,-170%) rotate(0deg) scale(.9)',opacity:1}],{duration:340,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'});
-        swapWord('Sent');
-        timers.push(setTimeout(()=>{ s.classList.add('read'); swapWord('Delivered'); },1500));
+        swapWord('Tap to undo');
+        timers.push(setTimeout(()=>{ s.classList.add('read'); swapWord('Delivered'); },3000));
       };
       const reset=()=>{
         timers.forEach(clearTimeout); timers=[];
         s.classList.remove('armed','sent','read'); knob.classList.remove('glass');
         s.querySelector('.pl').getAnimations().forEach(a=>a.cancel());
-        w.textContent=V==='to'?'Hold to send':'Sending…'; s.dataset.s='hover';
+        w.textContent=V==='to'?'Hold to send':'Sending…'; s.dataset.s='hover'; s.classList.remove('undoing');
       };
       s.addEventListener('pointerdown',e=>{
         if(s.dataset.s==='disabled') return;
-        if(s.dataset.s==='done'){ reset(); return; }
+        if(s.dataset.s==='done'){
+          if(s.classList.contains('undoing')) return;
+          if(!s.classList.contains('read')){
+            // inside the 3 s window: take it back
+            timers.forEach(clearTimeout); timers=[]; s.classList.add('undoing'); swapWord('Unsent');
+            knob.animate([{translate:'0 0'},{translate:'-6px 0'},{translate:'3px 0'},{translate:'0 0'}],{duration:380,easing:'ease-out'});
+            timers.push(setTimeout(reset,1100)); return;
+          }
+          reset(); return; }
         s.setPointerCapture(e.pointerId);
         s.dataset.s='active'; s.classList.add('winding','armed'); knob.classList.add('lift');
         set(knob,'--kw',(W-14)+'px');
@@ -1224,7 +1248,7 @@ sec.appendChild(el('<p class="sub" style="margin-top:28px">States · icon + text
 g=grid('m4',SS.map(x=>x[0]));
 E.forEach(e=>{ g.appendChild(rowh(e)); SS.forEach(([t,f])=>g.appendChild(cell(freeze(B.liquid({v:'it',e:e[0]}),f),1))); });
 sec.appendChild(g);
-const DS=[['Sent',n=>n._finish(false)],['Delivered',n=>n._finish(true)]];
+const DS=[['Tap to undo',n=>n._finish(false)],['Delivered',n=>n._finish(true)]];
 sec.appendChild(el('<p class="sub" style="margin-top:28px">After release · icon + text</p>'));
 g=grid('m2',DS.map(x=>x[0]));
 E.forEach(e=>{ g.appendChild(rowh(e)); DS.forEach(([t,f])=>g.appendChild(cell(freeze(B.liquid({v:'it',e:e[0]}),f),1))); });
@@ -1270,7 +1294,7 @@ const sp=el(`<div class="specs">
 <tr><td>Font</td><td>SF Pro Display / Inter</td></tr>
 <tr><td>Label</td><td><code>0.27 × H</code> = <code>18 px</code> · weight <code>500</code> · line height <code>1</code></td></tr>
 <tr><td>Numerals</td><td><code>0.34 × H</code> = <code>22 px</code> · weight <code>600</code> · tabular · roll vertically</td></tr>
-<tr><td>Status</td><td>Sending… → Sent → Delivered · words roll, never cut</td></tr>
+<tr><td>Status</td><td>Sending… → Tap to undo → Delivered (or Unsent) · words roll, never cut</td></tr>
 </table></div>
 <div class="card"><h3>Colour</h3><table id="ctab"></table></div>
 <div class="card"><h3>Motion</h3><table>
@@ -1278,7 +1302,7 @@ const sp=el(`<div class="specs">
 <tr><td>Soft</td><td><code>cubic-bezier(.34, 1.2, .64, 1)</code></td></tr>
 <tr><td>Ease</td><td><code>cubic-bezier(.22, 1, .36, 1)</code></td></tr>
 <tr><td>Hover</td><td>send: ball swallows the slab · stepper: ball leans <code>9 px</code> to the pointer</td></tr>
-<tr><td>Hold to send</td><td>winds back over <code>1250 ms</code> · taut at 82 % · fires, plane flies off, ✓ then ✓✓ after <code>1.5 s</code></td></tr>
+<tr><td>Hold to send</td><td>winds back over <code>1250 ms</code> · taut at 82 % · fires, plane flies off, ✓ + “Tap to undo” · a ring drains round the ball for <code>3 s</code> (text only: a hairline) · tap inside it → Unsent, springs back · then ✓✓ Delivered</td></tr>
 <tr><td>Quantity tap</td><td>ball thrown to the end and back · flying <code>1.08 × 0.95</code> · hits the wall squashed narrow and tall <code>0.8 × 1.16</code> · pinned while holding <code>0.88 × 1.1</code> · <code>380 ms</code> · hits at <code>170 ms</code> · the number rolls with the ball (≈170°) and changes on the hidden side at impact</td></tr>
 <tr><td>Impact</td><td>instant, no fade: the slab recoils <code>2 px</code> toward the hit (<code>150 ms</code>) and flashes a flat <code>14 %</code> tint for <code>110 ms</code>, then cuts · each count while holding at half strength · wall at 0 / 99: <code>±3 px</code> shake, grey</td></tr>
 <tr><td>Quantity hold</td><td>pinned after <code>380 ms</code> · repeat from <code>220 ms</code>, × 0.86, floor <code>55 ms</code> · wall at 0 / 99 bounces</td></tr>
@@ -1295,7 +1319,7 @@ colours(); document.querySelectorAll('.palbar button').forEach(b=>b.addEventList
   const COMPS=[
     {key:'send',name:'Hold to send',note:'Hover — the ball swallows the slab. Hold — it winds back like a plunger, then fires. Let go early and it springs back.',
      structs:[['it','Icon + text'],['to','Text only'],['io','Icon only']],
-     states:()=>[['live','Live'],...SS.map(([t,f])=>[t,t]),['Sent','Sent'],['Delivered','Delivered']]},
+     states:()=>[['live','Live'],...SS.map(([t,f])=>[t,t]),['Tap to undo','Undo'],['Delivered','Delivered']]},
     {key:'qty',name:'Quantity',note:'Tap an end — the ball is thrown there and the number rolls over with it. Hold — it pins and counts, faster and faster.',
      structs:[['stepper','Stepper'],['presets','Presets']],
      states:()=>[['live','Live'],['Enabled','Enabled'],['Hover','Hover'],['Pressed','Pressed'],['Disabled','Disabled']]}];
