@@ -750,6 +750,13 @@ html[data-pal="flat"] .card{background:#fff;box-shadow:none}
 .fold-in{overflow:hidden;min-height:0}
 .fold .blk:first-child{margin-top:40px}
 
+/* ?thumb=1 — overview tile: just the button */
+html.thumb,html.thumb body{background:#f1f1f2}
+html.thumb .page{padding:0;max-width:none}
+html.thumb .side,html.thumb .arw,html.thumb .count,html.thumb .fold{display:none!important}
+html.thumb .hero{gap:0}
+html.thumb .stagebox{height:100vh;border-radius:0;background:transparent;box-shadow:none}
+html.thumb .stage-main>.shell{zoom:2.2}
 </style>
 </head>
 <body>
@@ -767,6 +774,7 @@ html[data-pal="flat"] .card{background:#fff;box-shadow:none}
 </div>
 
 <script>
+if(/[?&]thumb=1/.test(location.search)) document.documentElement.classList.add('thumb');
 (function(){
   const set=p=>{ document.documentElement.dataset.pal=p; document.querySelectorAll('.palbar button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));  };
   let p='emerald';
